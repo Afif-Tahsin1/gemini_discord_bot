@@ -87,8 +87,9 @@ async def setchannel(interaction: discord.Interaction, channel : discord.TextCha
     guild_id = str(interaction.guild.id)
     channelid = str(channel.id)
     try:
+        await interaction.response.defer()
         data[guild_id] = channelid
-        await interaction.response.send_message("Successfully set this channel for gemini's reply")
+        await interaction.followup.send("Successfully set this channel for gemini's reply")
     except Exception as e:
         print(f"Something went wrong! Error: {e}")
     await save_json(data)
