@@ -11,6 +11,7 @@ load_dotenv()
 from flask import Flask
 from threading import Thread
 
+
 # এটি পাইথনের 'express' এর মতো কাজ করবে
 app = Flask('')
 
@@ -52,6 +53,7 @@ async def on_ready():
         print(f"Successfully loaded {len(synched)} commands")
     except Exception as e:
         print(f"Something went wrong! Error: {e}")
+chat = clientg.chats.create(model="gemini-3-flash-preview")
 @client.event
 async def on_message(message):
     global gemini_busy
@@ -66,9 +68,7 @@ async def on_message(message):
                 if gemini_busy : 
                     return await message.reply("Wait 1minutes! Gemini is busy!")
                 msg = await message.reply("Generating contents...")
-                response = clientg.models.generate_content(
-                model="gemini-3-flash-preview",
-                contents=f"Hello, I'm {message.author.name}. Answer the prompt in less than 1800 character: promt: {message.content}")
+                response = chat.send_message(f"Hello, I'm {message.author.name}. Answer the prompt in less than 1800 character: promt: {message.content}")
                 await msg.edit(content=response.text)
             except Exception as e:
                 if ("429" in str(e)):
