@@ -1,0 +1,75 @@
+import discord
+from discord.ext import commands
+from discord import app_commands
+from google import genai
+from dotenv import load_dotenv
+import json
+import os
+from google.genai import errors
+import asyncio
+load_dotenv()
+gemini_busy = False
+api = os.getenv("API")
+token = os.getenv("TOKEN")
+clientg = genai.Client(api_key=api)
+intents = discord.Intents.default()
+intents.message_content = True
+client = commands.Bot(command_prefix=None, intents=intents)
+
+async def load_json():
+    with open("channels.json", "r") as f:
+        data = json.load(f)
+        return data
+async def save_json(data):
+    with open("channels.json", "w") as f:
+        json.dump(data, f, indent=4)
+@client.event
+async def on_ready():
+    try:
+        synched = await client.tree.sync()
+        if (len(synched) == 0):
+            return print("No command found")
+        print(f"Successfully loaded {len(synched)} commands")
+    except Exception as e:
+        print(f"Something went wrong! Error: {e}")
+@client.event
+async def on_message(message):
+    global gemini_busy
+    if message.author == client.user:
+        return
+    data = await load_json()
+    guild_id = str(message.guild.id)
+    channelid = str(message.channel.id)
+    if guild_id in data:
+        if channelid == data[guild_id]:
+            try:
+                if gemini_busy : 
+                    return await message.reply("Wait 1minutes! Gemini is busy!")
+                msg = await message.reply("Generating contents...")
+                response = clientg.models.generate_content(
+                model="gemini-3-flash-preview",
+                contents=f"Hello, I'm {message.author.name}. Answer the prompt in less than 1800 character: promt: {message.content}")
+                await msg.edit(content=response.text)
+            except Exception as e:
+                if ("429" in str(e)):
+                    gemini_busy = True
+                    await message.reply("Wait 1minutes! Gemini is busy!")
+                    await asyncio.sleep(60)
+                    gemini_busy = False
+                else:
+                    print(f"Error: {e}")
+
+            
+@client.tree.command(name="setchannel", description="set channel where gemini will reply")
+@app_commands.describe(channel="pls select a channel")
+async def setchannel(interaction: discord.Interaction, channel : discord.TextChannel):
+    data = await load_json()
+    guild_id = str(interaction.guild.id)
+    channelid = str(channel.id)
+    try:
+        data[guild_id] = channelid
+        await interaction.response.send_message("Successfully set this channel for gemini's reply")
+    except Exception as e:
+        print(f"Something went wrong! Error: {e}")
+    await save_json(data)
+client.run(token)
