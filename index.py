@@ -10,7 +10,7 @@ import asyncio
 load_dotenv()
 from flask import Flask
 from threading import Thread
-
+can_send = True
 
 # এটি পাইথনের 'express' এর মতো কাজ করবে
 app = Flask('')
@@ -38,9 +38,12 @@ intents.message_content = True
 client = commands.Bot(command_prefix=None, intents=intents)
 
 async def load_json():
-    with open("channels.json", "r") as f:
-        data = json.load(f)
-        return data
+    try:
+        with open("channels.json", "r") as f:
+            data = json.load(f)
+            return data
+    except (json.JSONDecodeError, FileNotFoundError):
+        return {}
 async def save_json(data):
     with open("channels.json", "w") as f:
         json.dump(data, f, indent=4)
@@ -57,8 +60,11 @@ chat = clientg.chats.create(model="gemini-3-flash-preview")
 @client.event
 async def on_message(message):
     global gemini_busy
+    global can_send
     if message.author == client.user:
         return
+    if (not can_send):
+        return await message.reply("Slow down!")
     data = await load_json()
     guild_id = str(message.guild.id)
     channelid = str(message.channel.id)
@@ -67,14 +73,18 @@ async def on_message(message):
             try:
                 if gemini_busy : 
                     return await message.reply("Wait 1minutes! Gemini is busy!")
+                
                 msg = await message.reply("Generating contents...")
                 response = chat.send_message(f"Hello, I'm {message.author.name}. Answer the prompt in less than 1800 character: promt: {message.content}")
+                can_send = False
                 await msg.edit(content=response.text)
+                await asyncio.sleep(20)
+                can_send = True
             except Exception as e:
                 if ("429" in str(e)):
                     gemini_busy = True
-                    await message.reply("Wait 1minutes! Gemini is busy!")
-                    await asyncio.sleep(60)
+                    await message.reply("Wait 5minutes! Gemini is busy!")
+                    await asyncio.sleep(300)
                     gemini_busy = False
                 else:
                     print(f"Error: {e}")
