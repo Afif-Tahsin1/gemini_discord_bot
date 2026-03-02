@@ -73,10 +73,11 @@ async def on_message(message):
             try:
                 if gemini_busy : 
                     return await message.reply("Wait 5minutes! Gemini is busy!")
-                can_send = False
+                
                 msg = await message.reply("Generating contents...")
                 response = chat.send_message(f"Hello, I'm {message.author.name}. Answer the prompt in less than 1800 character: promt: {message.content}")
                 await msg.edit(content=response.text)
+                can_send = False
                 await asyncio.sleep(60)
                 can_send = True
             except Exception as e:
