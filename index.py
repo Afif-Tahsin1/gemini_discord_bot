@@ -72,19 +72,18 @@ async def on_message(message):
         if channelid == data[guild_id]:
             try:
                 if gemini_busy : 
-                    return await message.reply("Wait 1minutes! Gemini is busy!")
-                
+                    return await message.reply("Wait 5minutes! Gemini is busy!")
+                can_send = False
                 msg = await message.reply("Generating contents...")
                 response = chat.send_message(f"Hello, I'm {message.author.name}. Answer the prompt in less than 1800 character: promt: {message.content}")
-                can_send = False
                 await msg.edit(content=response.text)
-                await asyncio.sleep(20)
+                await asyncio.sleep(60)
                 can_send = True
             except Exception as e:
                 if ("429" in str(e)):
                     gemini_busy = True
                     await message.reply("Wait 5minutes! Gemini is busy!")
-                    await asyncio.sleep(300)
+                    await asyncio.sleep(600)
                     gemini_busy = False
                 else:
                     print(f"Error: {e}")
