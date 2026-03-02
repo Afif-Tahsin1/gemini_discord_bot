@@ -63,8 +63,7 @@ async def on_message(message):
     global can_send
     if message.author == client.user:
         return
-    if (not can_send):
-        return await message.reply("Slow down!")
+    
     data = await load_json()
     guild_id = str(message.guild.id)
     channelid = str(message.channel.id)
@@ -73,7 +72,8 @@ async def on_message(message):
             try:
                 if gemini_busy : 
                     return await message.reply("Wait 5minutes! Gemini is busy!")
-                
+                if (not can_send):
+                    return await message.reply("Slow down!")
                 msg = await message.reply("Generating contents...")
                 response = chat.send_message(f"Hello, I'm {message.author.name}. Answer the prompt in less than 1800 character: promt: {message.content}")
                 await msg.edit(content=response.text)
