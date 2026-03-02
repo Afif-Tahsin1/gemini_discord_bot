@@ -75,7 +75,7 @@ async def on_message(message):
                 if (not can_send):
                     return await message.reply("Slow down!")
                 msg = await message.reply("Generating contents...")
-                response = chat.send_message(f"Hello, I'm {message.author.name}. Answer the prompt in less than 1800 character: promt: {message.content}. Your mention name is {client.user.mention}")
+                response = chat.send_message(f"Hello, I'm {message.author.display_name}. Answer the prompt in less than 1800 character: promt: {message.content}. Your mention name is {client.user.mention} You are in a discord server named: {message.guild.name}")
                 await msg.edit(content=response.text)
                 can_send = False
                 await asyncio.sleep(60)
