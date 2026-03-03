@@ -32,7 +32,7 @@ keep_alive()
 gemini_busy = False
 api = os.getenv("API")
 token = os.getenv("TOKEN")
-clientg = genai.Client(api_key=api)
+clientg = genai.Client(api_key=api, http_options={'api_version': 'v1alpha'})
 intents = discord.Intents.default()
 intents.message_content = True
 client = commands.Bot(command_prefix=None, intents=intents)
